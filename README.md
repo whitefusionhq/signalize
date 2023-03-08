@@ -177,7 +177,7 @@ effect do
 
   # Whenever this effect is triggered, increase `effect_count`.
   # But we don't want this signal to react to `effect_count`
-  effect_count.value = effect_count.peek
+  effect_count.value = effect_count.peek + 1
 end
 ```
 
