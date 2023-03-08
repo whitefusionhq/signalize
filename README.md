@@ -139,8 +139,8 @@ full_name = computed { name.value + " " + surname.value }
 dispose = effect { puts full_name.value }
 
 batch do
-	name.value = "Foo"
-	surname.value = "Bar"
+  name.value = "Foo"
+  surname.value = "Bar"
 end
 ```
 
@@ -173,11 +173,11 @@ counter = signal(0)
 effect_count = signal(0)
 
 effect do
-	puts counter.value
+  puts counter.value
 
-	# Whenever this effect is triggered, increase `effect_count`.
-	# But we don't want this signal to react to `effect_count`
-	effect_count.value = effect_count.peek
+  # Whenever this effect is triggered, increase `effect_count`.
+  # But we don't want this signal to react to `effect_count`
+  effect_count.value = effect_count.peek
 end
 ```
 
