@@ -32,6 +32,8 @@ Signalize's public API consists of four methods (you can think of them almost li
 The first building block is the `Signalize::Signal` class. You can think of this as a reactive value object which wraps an underlying primitive like String, Integer, Array, etc.
 
 ```ruby
+require "signalize"
+
 counter = Signalize.signal(0)
 
 # Read value from signal, logs: 0
@@ -44,6 +46,7 @@ counter.value = 1
 You can include the `Signalize::API` mixin to access these methods directly in any context:
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 counter = signal(0)
@@ -56,6 +59,7 @@ counter.value += 1
 You derive computed state by accessing a signal's value within a `computed` block and returning a new value. Every time that signal value is updated, a computed value will likewise be updated. Actually, that's not quite accurate — the computed value only computes when it's read. In this sense, we can call computed values "lazily-evaluated".
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 name = signal("Jane")
@@ -82,6 +86,7 @@ puts full_name.value
 Effects are callbacks which are executed whenever values which the effect has "subscribed" to by referencing them have changed. An effect callback is run immediately when defined, and then again for any future mutations.
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 name = signal("Jane")
@@ -99,6 +104,7 @@ name.value = "John"
 You can dispose of an effect whenever you want, thereby unsubscribing it from signal notifications.
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 name = signal("Jane")
@@ -122,6 +128,7 @@ surname.value = "Doe 2"
 You can write to  multiple signals within a batch, and flush the updates at all once (thereby notifying computed refreshes and effects).
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 name = signal("Jane")
@@ -142,6 +149,7 @@ end
 You can explicitly subscribe to a signal signal value and be notified on every change. (Essentially the Observable pattern.) In your block, the new signal value will be supplied as an argument.
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 counter = signal(0)
@@ -158,6 +166,7 @@ counter.value = 1 # logs the new value
 If you need to access a signal's value inside an effect without subscribing to that signal's updates, use the `peek` method instead of `value`.
 
 ```ruby
+require "signalize"
 include Signalize::API
 
 counter = signal(0)
