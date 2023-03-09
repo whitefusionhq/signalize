@@ -17,7 +17,7 @@ module Signalize
   end
 
   def self.cycle_detected
-	  raise "Cycle detected"
+	  raise Signalize::Error, "Cycle detected"
   end
 
   RUNNING = 1 << 0
@@ -339,7 +339,7 @@ module Signalize
     end
 
     def end_effect(effect, prev_context, *_) # allow additional args for currying
-      raise "Out-of-order effect" if eval_context != effect
+      raise Signalize::Error, "Out-of-order effect" if eval_context != effect
 
       cleanup_sources(effect)
       self.eval_context = prev_context
@@ -586,8 +586,13 @@ module Signalize
       finis = _start
 
       begin
+        compute_executed = false
         @_cleanup = _compute.() if (@_flags & DISPOSED).zero? && @_compute.nil?.!
+        compute_executed = true
       ensure
+        unless compute_executed
+          raise Signalize::Error, "Early return or break detected in effect block"
+        end
         finis.(nil) # TODO: figure out this weird shit
       end
     end

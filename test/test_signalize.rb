@@ -98,6 +98,20 @@ class TestSignalize < Minitest::Test
     assert_equal 2, effect_ran_twice
   end
 
+  def multiple_effect_run
+    x = Signalize.signal(1)
+    results = nil
+    Signalize.effect do
+      results = "done" if x.value == 3
+    end; x.value = 2; x.value = 3; x.value = 4
+    results || "oops"
+  end
+
+  def test_multiple_runs
+    multiple_effect_run
+
+    assert_equal "done", multiple_effect_run
+  end
 
   def test_batch
     name = signal("Jane")

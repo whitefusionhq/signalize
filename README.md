@@ -123,9 +123,59 @@ dispose.()
 surname.value = "Doe 2"
 ```
 
+**IMPORTANT:** you cannot use `return` or `break` within an effect block. Doing so will raise an exception (due to it breaking the underlying execution model).
+
+```ruby
+def my_method(signal_obj)
+  effect do
+    return if signal_obj.value > 5 # DON'T DO THIS!
+
+    puts signal_obj.value
+  end
+
+  # more code here
+end
+```
+
+Instead, try to resolve it using more explicit logic:
+
+```ruby
+def my_method(signal_obj)
+  should_exit = false
+
+  effect do
+    should_exit = true && next if signal_obj.value > 5
+
+    puts signal_obj.value
+  end
+
+  return if should_exit
+
+  # more code here
+end
+```
+
+However, there's no issue if you pass in a method proc directly:
+
+```ruby
+def my_method(signal_obj)
+  @signal_obj = signal_obj
+
+  effect &method(:an_effect_method)
+
+  # more code here
+end
+
+def an_effect_method
+  return if @signal_obj.value > 5
+
+  puts @signal_obj.value
+end
+```
+
 ### `batch { }`
 
-You can write to  multiple signals within a batch, and flush the updates at all once (thereby notifying computed refreshes and effects).
+You can write to multiple signals within a batch, and flush the updates at all once (thereby notifying computed refreshes and effects).
 
 ```ruby
 require "signalize"
