@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
+require "concurrent"
 require_relative "signalize/version"
 
 module Signalize
   class Error < StandardError; end
 
   class << self
-    def class_variablize(name)
+    def global_map_accessor(name)
       define_singleton_method "#{name}" do
-        class_variable_get("@@#{name}")
+        GLOBAL_MAP[name]
       end
       define_singleton_method "#{name}=" do |value|
-        class_variable_set("@@#{name}", value)
+        GLOBAL_MAP[name] = value
       end
     end
   end
@@ -27,24 +28,26 @@ module Signalize
   HAS_ERROR = 1 << 4
   TRACKING = 1 << 5
 
+  GLOBAL_MAP = Concurrent::Map.new
+
   # Computed | Effect | nil
-  @@eval_context = nil
-  class_variablize :eval_context
+  global_map_accessor :eval_context
+  self.eval_context = nil
 
   # Effects collected into a batch.
-  @@batched_effect = nil
-  class_variablize :batched_effect
-  @@batch_depth = 0
-  class_variablize :batch_depth
-  @@batch_iteration = 0
-  class_variablize :batch_iteration
+  global_map_accessor :batched_effect
+  self.batched_effect = nil
+  global_map_accessor :batch_depth
+  self.batch_depth = 0
+  global_map_accessor :batch_iteration
+  self.batch_iteration = 0
 
   # NOTE: we have removed the global version optimization for Ruby, due to
   # the possibility of long-running server processes and the number reaching
   # a dangerously high integer value.
   #
-  # @@global_version = 0  
-  # class_variablize :global_version
+  # global_map_accessor :global_version
+  # self.global_version = 0
 
   Node = Struct.new(
     :_version,
@@ -436,6 +439,10 @@ module Signalize
     end
 
     def peek = @value
+
+    def inspect
+      "#<#{self.class} value: #{peek.inspect}>"
+    end
   end
 
   class Computed < Signal
