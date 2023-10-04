@@ -25,7 +25,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
-Signalize's public API consists of four methods (you can think of them almost like functions): `signal`, `computed`, `effect`, and `batch`.
+Signalize's public API consists of five methods (you can think of them almost like functions): `signal`, `untracked`, `computed`, `effect`, and `batch`.
 
 ### `signal(initial_value)`
 
@@ -232,7 +232,7 @@ end
 counter.value = 1 # logs the new value
 ```
 
-### `peek`
+### `signal.peek`
 
 If you need to access a signal's value inside an effect without subscribing to that signal's updates, use the `peek` method instead of `value`.
 
@@ -252,6 +252,55 @@ effect do
 end
 ```
 
+## Signalize Struct
+
+An optional add-on to Signalize, the `Singalize::Struct` class lets you define multiple signal or computed variables to hold in struct-like objects. You can even add custom methods to your classes with a simple DSL. (The API is intentionally similar to `Data` in Ruby 3.2+, although these objects are of course mutable.)
+
+Here's what it looks like:
+
+```ruby
+require "signalize/struct"
+
+include Signalize::API
+
+TestSignalsStruct = Signalize::Struct.define(
+  :str,
+  :int,
+  :multiplied_by_10
+) do # optional block for adding methods
+  def increment!
+    self.int += 1
+  end
+end
+
+struct = TestSignalsStruct.new(
+  int: 0,
+  str: "Hello World",
+  multiplied_by_10: computed { struct.int * 10 }
+)
+
+effect do
+  puts struct.multiplied_by_10 # 0
+end
+
+effect do
+  puts struct.str # "Hello World"
+end
+
+struct.increment! # above effect will now output 10
+struct.str = "Goodbye!" # above effect will now output "Goodbye!"
+```
+
+If you ever need to get at the actual `Signal` object underlying a value, just call `*_signal`. For example, you could call `int_signal` for the above example to get a signal object for `int`.
+
+Signalize structs require all of their members to be present when initializing…you can't pass only some keyword arguments.
+
+Signalize structs support `to_h` as well as `deconstruct_keys` which is used for pattern matching and syntax like `struct => { str: }` to set local variables.
+
+You can call `members` (as both object/class methods) to get a list of the value names in the struct.
+
+Finally, both `inspect` and `to_s` let you debug the contents of a struct.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/rake test` to run the tests, or `bin/guard` or run them continuously in watch mode. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
@@ -260,7 +309,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Signalize is considered a direct port of the [original Signals JavaScript library](https://github.com/preactjs/signals). This means we are unlikely to accept any additional features other than what's provided by Signals. If Signals adds new functionality in the future, we will endeavor to replicate it in Signalize. Furthermore, if there's some unwanted behavior in Signalize that's also present in Signals, we are unlikely to modify that behavior.
+Signalize is considered a direct port of the [original Signals JavaScript library](https://github.com/preactjs/signals). This means we are unlikely to accept any additional features other than what's provided by Signals (unless it's completely separate, like our `Signalize::Struct` add-on). If Signals adds new functionality in the future, we will endeavor to replicate it in Signalize. Furthermore, if there's some unwanted behavior in Signalize that's also present in Signals, we are unlikely to modify that behavior.
 
 However, if you're able to supply a bugfix or performance optimization which will help bring Signalize _more_ into alignment with its Signals counterpart, we will gladly accept your PR!
 

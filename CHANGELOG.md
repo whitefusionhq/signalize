@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2023-10-04
+
+- Provide `Signalize::Struct`, a struct-like object to hold multiple signals (including computed)
+  (optional via `require "signalize/struct"`)
+
 ## [1.2.0] - 2023-10-03
 
 - Add `untracked` method (implements #5)
