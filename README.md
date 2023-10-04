@@ -54,6 +54,27 @@ counter = signal(0)
 counter.value += 1
 ```
 
+### `untracked { }`
+
+In case when you're receiving a callback that can read some signals, but you don't want to subscribe to them, you can use `untracked` to prevent any subscriptions from happening.
+
+```ruby
+require "signalize"
+include Signalize::API
+
+counter = signal(0)
+effect_count = signal(0)
+fn = proc { effect_count.value + 1 }
+
+effect do
+  # Logs the value
+	puts counter.value
+
+	# Whenever this effect is triggered, run `fn` that gives new value
+	effect_count.value = untracked(&fn)
+end
+```
+
 ### `computed { }`
 
 You derive computed state by accessing a signal's value within a `computed` block and returning a new value. Every time that signal value is updated, a computed value will likewise be updated. Actually, that's not quite accurate — the computed value only computes when it's read. In this sense, we can call computed values "lazily-evaluated".

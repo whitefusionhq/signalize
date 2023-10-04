@@ -21,6 +21,10 @@ module Signalize
 	  raise Signalize::Error, "Cycle detected"
   end
 
+  def self.mutation_detected
+	  raise Signalize::Error, "Computed cannot have side-effects"
+  end
+
   RUNNING = 1 << 0
   NOTIFIED = 1 << 1
   OUTDATED = 1 << 2
@@ -33,6 +37,10 @@ module Signalize
   # Computed | Effect | nil
   global_map_accessor :eval_context
   self.eval_context = nil
+
+  # Used by `untracked` method
+  global_map_accessor :untracked_depth
+  self.untracked_depth = 0
 
   # Effects collected into a batch.
   global_map_accessor :batched_effect
@@ -414,6 +422,8 @@ module Signalize
     end
 
     def value=(value)
+      Signalize.mutation_detected if Signalize.eval_context.is_a?(Signalize::Computed)
+
       if value != @value
         Signalize.cycle_detected if Signalize.batch_iteration > 100
 
@@ -484,7 +494,7 @@ module Signalize
         return true
       end
     
-      prevContext = Signalize.eval_context
+      prev_context = Signalize.eval_context
       begin
         Signalize.prepare_sources(self)
         Signalize.eval_context = self
@@ -499,7 +509,7 @@ module Signalize
         @_flags |= HAS_ERROR
         @_version += 1
       end
-      Signalize.eval_context = prevContext
+      Signalize.eval_context = prev_context
       Signalize.cleanup_sources(self)
       @_flags &= ~RUNNING
 
@@ -665,6 +675,21 @@ module Signalize
         return yield
       ensure
         Signalize.end_batch
+      end
+    end
+
+    def untracked
+      return yield unless Signalize.untracked_depth.zero?
+
+      prev_context = Signalize.eval_context
+      Signalize.eval_context = nil
+      Signalize.untracked_depth += 1
+
+      begin
+        return yield
+      ensure
+        Signalize.untracked_depth -= 1
+        Signalize.eval_context = prev_context
       end
     end
   end

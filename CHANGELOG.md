@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2023-10-03
+
+- Add `untracked` method (implements #5)
+- Add `mutation_detected` check for `computed`
+
+Gem now roughly analogous to `@preact/signals-core` v1.5
+
 ## [1.1.0] - 2023-03-25
 
 - Provide better signal/computed inspect strings (fixes #1)

@@ -146,4 +146,31 @@ class TestSignalize < Minitest::Test
     test_value = 10
     counter.value = test_value # logs the new value
   end
+
+  def test_disallow_setting_signal_in_computed
+    v = 123
+    a = signal(v)
+    c = computed { a.value += 1 }
+    error = assert_raises(Signalize::Error) do
+      c.value
+    end
+    
+    assert_equal "Computed cannot have side-effects", error.message
+    assert_equal v, a.value
+  end
+
+  def test_run_untracked_callback_once
+    calls = 0
+		a = signal(1);
+		b = signal(2);
+		spy = proc do
+      calls += 1
+      a.value + b.value
+    end
+		effect { untracked(&spy) }
+		a.value = 10
+		b.value = 20
+
+    assert_equal 1, calls
+  end
 end
